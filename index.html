@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TruthBot AI Checker</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; background: #f4f4f4; text-align: center; }
+        .box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
+        input { margin: 20px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; font-weight: bold; padding: 15px; border-radius: 5px; display: none; }
+        .APPROVED { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .FALSE { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .Loading { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>🛡️ TruthBot AI</h1>
+    <p>Upload a document (PDF/Image) to verify facts.</p>
+    
+    <input type="file" id="fileInput">
+    <br>
+    <button onclick="checkFile()">Verify Document</button>
+    
+    <div id="result"></div>
+</div>
+
+<script>
+    async function checkFile() {
+        const fileInput = document.getElementById('fileInput');
+        const resultDiv = document.getElementById('result');
+        
+        if(fileInput.files.length === 0) {
+            alert("Please select a file first");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'Loading';
+        resultDiv.innerText = "Analyzing document... (Gemini is thinking)";
+
+        try {
+            const response = await fetch('http://localhost:8000/verify', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            resultDiv.className = data.status;
+            resultDiv.innerHTML = `
+                <h3>Status: ${data.status}</h3>
+                <p>${data.reason}</p>
+            `;
+            
+        } catch (error) {
+            resultDiv.className = 'FALSE';
+            resultDiv.innerText = "Error connecting to API.";
+        }
+    }
+</script>
+
+</body>
+</html>

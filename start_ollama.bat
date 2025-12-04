@@ -1,0 +1,3 @@
+@echo off
+echo Starting Ollama with Qwen model...
+"C:\Users\khmal\AppData\Local\Programs\Ollama\ollama.exe" run qwen
