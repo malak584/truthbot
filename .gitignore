@@ -12,7 +12,7 @@ env/
 ENV/
 
 # Environment variables
-.env
+
 
 # Distribution / packaging
 .Python
