@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthBot AI - Fact Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-section.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .file-input-label:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .verify-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .verify-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .verify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-verified {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+        }
+
+        .result-false {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+        }
+
+        .result-partial {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .result-status {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .percentage-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .summary {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+        }
+
+        .analysis {
+            background: rgba(255,255,255,0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .errors {
+            background: rgba(255,255,255,0.7);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .errors h3 {
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .errors ul {
+            margin-left: 20px;
+        }
+
+        .errors li {
+            margin: 5px 0;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .supported-formats {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .powered-by {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+        }
+
+        .powered-by strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ TruthBot AI</h1>
+            <p>Advanced AI-Powered Fact Verification</p>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <label for="fileInput" class="file-input-label">
+                📁 Choose File
+            </label>
+            <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.bmp,.webp,.txt">
+            
+            <p style="margin-top: 10px; color: #666;">or drag and drop your file here</p>
+            
+            <div class="file-info" id="fileInfo">
+                <strong>Selected:</strong> <span id="fileName"></span>
+                <span id="fileSize" style="color: #999;"></span>
+            </div>
+            
+            <div class="supported-formats">
+                Supported: PDF, Images (PNG, JPG, JPEG), Text files
+            </div>
+        </div>
+
+        <button class="verify-btn" id="verifyBtn" onclick="verifyDocument()" disabled>
+            🔍 Verify Document
+        </button>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>🤖 AI is analyzing your document...</p>
+            <p style="color: #999; font-size: 0.9em;">This may take a few moments</p>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <div class="result-status" id="resultStatus"></div>
+                <div class="percentage-circle" id="percentageCircle"></div>
+            </div>
+            
+            <div class="summary" id="summary"></div>
+            
+            <div class="analysis">
+                <h3 style="margin-bottom: 10px;">📊 Detailed Analysis:</h3>
+                <div id="analysis"></div>
+            </div>
+            
+            <div class="errors" id="errorsSection" style="display: none;">
+                <h3>⚠️ Issues Found:</h3>
+                <ul id="errorsList"></ul>
+            </div>
+        </div>
+
+        <div class="powered-by">
+            Powered by <strong>Google Gemini AI</strong>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+
+        // File input change handler
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                displayFileInfo(file);
+            }
+        });
+
+        // Drag and drop handlers
+        uploadSection.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                displayFileInfo(e.dataTransfer.files[0]);
+            }
+        });
+
+        function displayFileInfo(file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = `(${formatFileSize(file.size)})`;
+            fileInfo.classList.add('active');
+            verifyBtn.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function verifyDocument() {
+            if (fileInput.files.length === 0) {
+                alert('Please select a file first');
+                return;
+            }
+
+            // Hide previous results
+            resultSection.classList.remove('active');
+            
+            // Show loading
+            loading.style.display = 'block';
+            verifyBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('http://localhost:8000/verify', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                // Hide loading
+                loading.style.display = 'none';
+                
+                // Display results
+                displayResults(data);
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                alert('Error: Unable to connect to the verification service. Make sure the server is running.');
+                console.error(error);
+            } finally {
+                verifyBtn.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            const percentage = data.percentage || 0;
+            
+            // Determine result class
+            let resultClass = 'result-partial';
+            let statusIcon = '⚠️';
+            let statusText = 'PARTIALLY VERIFIED';
+            
+            if (percentage >= 80) {
+                resultClass = 'result-verified';
+                statusIcon = '✅';
+                statusText = 'VERIFIED';
+            } else if (percentage < 50) {
+                resultClass = 'result-false';
+                statusIcon = '❌';
+                statusText = 'FALSE INFORMATION';
+            }
+            
+            // Set result section class
+            resultSection.className = `result-section active ${resultClass}`;
+            
+            // Set status
+            document.getElementById('resultStatus').innerHTML = `${statusIcon} ${statusText}`;
+            
+            // Set percentage
+            const percentageCircle = document.getElementById('percentageCircle');
+            percentageCircle.textContent = `${percentage}%`;
+            percentageCircle.style.color = percentage >= 80 ? '#28a745' : percentage >= 50 ? '#ffc107' : '#dc3545';
+            
+            // Set summary
+            document.getElementById('summary').innerHTML = `<strong>Summary:</strong> ${data.summary || 'No summary available'}`;
+            
+            // Set analysis
+            document.getElementById('analysis').textContent = data.analysis || 'No detailed analysis available.';
+            
+            // Set errors
+            const errorsSection = document.getElementById('errorsSection');
+            const errorsList = document.getElementById('errorsList');
+            
+            if (data.errors && data.errors.length > 0) {
+                errorsList.innerHTML = '';
+                data.errors.forEach(error => {
+                    const li = document.createElement('li');
+                    li.textContent = error;
+                    errorsList.appendChild(li);
+                });
+                errorsSection.style.display = 'block';
+            } else {
+                errorsSection.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
