@@ -3,7 +3,5 @@ uvicorn
 python-multipart
 requests
 PyPDF2
-Pillow
-pytesseract
 python-dotenv
-google-generativeai
+ollama
